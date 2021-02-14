@@ -1,0 +1,39 @@
+#!/bin/bash
+
+echo "Starting script to backup the database..."
+
+# https://tecadmin.net/bash-script-mysql-database-backup/
+
+REMOTE_ADDRESS=root@165.232.107.19
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_USER=backup
+MYSQL_PASSWORD=gogubackandup
+DATABASE_NAME=test
+TODAY=`date +"%d%b%Y_%H-%M-%S"`
+DUMP_FILE="$TODAY.sql.gz"
+DOWNLOAD_PATH=$HOME/backups
+
+DOCKER_CONTAINER=$(ssh $REMOTE_ADDRESS "docker ps | grep -o srv-captain--database-001-db.*")
+
+ssh $REMOTE_ADDRESS "docker exec $DOCKER_CONTAINER mysqldump --single-transaction -h ${MYSQL_HOST} \
+    -P ${MYSQL_PORT} \
+    -u ${MYSQL_USER} \
+    -p${MYSQL_PASSWORD} \
+    ${DATABASE_NAME} | gzip > $DUMP_FILE"
+
+scp $REMOTE_ADDRESS:/root/$DUMP_FILE $DOWNLOAD_PATH/$DUMP_FILE
+
+ssh $REMOTE_ADDRESS "rm $DUMP_FILE"
+
+if [ $? -eq 0 ]
+then
+    SUCCESS_MSG="$DATABASE_NAME database backup successfully completed"
+    echo $SUCCESS_MSG
+    $HOME/scripts/post-slack "$SUCCESS_MSG"
+else
+    FAIL_MSG="Error found during backup for $DATABASE_NAME"
+    echo $FAIL_MSG
+    $HOME/scripts/post-slack "$FAIL_MSG"
+    exit 1
+fi

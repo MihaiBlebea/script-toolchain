@@ -1,0 +1,50 @@
+#!/bin/bash
+
+echo "Starting script to backup the database..."
+
+# https://tecadmin.net/bash-script-mysql-database-backup/
+
+REMOTE_ADDRESS=root@165.232.107.19
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_USER=backup
+MYSQL_PASSWORD=gogubackandup
+DATABASE_NAME=test
+BACKUP_FOLDER=backups
+
+# Copy the file from backup
+echo "Starting to copy the backup file $1"
+cp $HOME/$BACKUP_FOLDER/$1 $HOME/$1
+
+# Unzip the file 
+DUMP_FILE=$(echo "${1%.*}")
+gzip -d $HOME/$1
+echo "Unzipped the file $DUMP_FILE"
+
+# Copy the dump file to server
+scp $HOME/$DUMP_FILE $REMOTE_ADDRESS:/root/$DUMP_FILE
+echo "File $DUMP_FILE was uploaded to server"
+
+# Remove the original file from local
+rm $HOME/$DUMP_FILE
+echo "File removed from local"
+
+# Getting the docker container name
+DOCKER_CONTAINER=$(ssh $REMOTE_ADDRESS "docker ps | grep -o srv-captain--database-001-db.*")
+
+# Restore database from file
+ssh $REMOTE_ADDRESS "docker exec $DOCKER_CONTAINER mysqldump --single-transaction -h ${MYSQL_HOST} \
+    -P ${MYSQL_PORT} \
+    -u ${MYSQL_USER} \
+    -p${MYSQL_PASSWORD} \
+    ${DATABASE_NAME} < $DUMP_FILE"
+
+ssh $REMOTE_ADDRESS "rm $DUMP_FILE"
+
+if [ $? -eq 0 ]
+then
+    echo "$DATABASE_NAME database backup successfully completed"
+else
+    echo "Error found during backup for $DATABASE_NAME"
+    exit 1
+fi
