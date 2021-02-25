@@ -1,5 +1,9 @@
 #!/bin/bash
 
-URL=https://hooks.slack.com/services/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
+if [[ -z "$SLACK_WEBHOOK" ]] 
+then
+    echo "Env variable SLACK_WEBHOOK is not set"
+    exit 1
+fi
 
 curl -X POST -H "Content-Type: application/json" --data '{"text": "'"$1"'"}' $SLACK_WEBHOOK

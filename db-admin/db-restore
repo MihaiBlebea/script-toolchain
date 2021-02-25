@@ -4,11 +4,11 @@ echo "Starting script to backup the database..."
 
 # https://tecadmin.net/bash-script-mysql-database-backup/
 
-REMOTE_ADDRESS=root@165.232.107.19
+REMOTE_ADDRESS=
 MYSQL_HOST=localhost
 MYSQL_PORT=3306
-MYSQL_USER=backup
-MYSQL_PASSWORD=gogubackandup
+MYSQL_USER=
+MYSQL_PASSWORD=
 DATABASE_NAME=test
 BACKUP_FOLDER=backups
 

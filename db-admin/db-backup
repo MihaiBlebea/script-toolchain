@@ -1,0 +1,77 @@
+#!/bin/bash
+
+echo "Starting script to backup the database..."
+
+# https://tecadmin.net/bash-script-mysql-database-backup/
+
+source ./.env
+
+if [[ -z "$DB_REMOTE_ADDRESS" ]] 
+then
+    echo "Env variable DB_REMOTE_ADDRESS is not set"
+    exit 1
+fi
+
+if [[ -z "$DB_MYSQL_HOST" ]] 
+then
+    echo "Env variable DB_MYSQL_HOST is not set"
+    exit 1
+fi
+
+if [[ -z "$DB_MYSQL_PORT" ]] 
+then
+    echo "Env variable DB_MYSQL_PORT is not set"
+    exit 1
+fi
+
+if [[ -z "$DB_MYSQL_USER" ]] 
+then
+    echo "Env variable DB_MYSQL_USER is not set"
+    exit 1
+fi
+
+if [[ -z "$DB_MYSQL_PASSWORD" ]] 
+then
+    echo "Env variable DB_MYSQL_PASSWORD is not set"
+    exit 1
+fi
+
+if [[ -z "$DB_DATABASE_NAME" ]] 
+then
+    echo "Env variable DB_DATABASE_NAME is not set"
+    exit 1
+fi
+
+TODAY=`date +"%s"`
+DUMP_FILE="$TODAY.sql.gz"
+DIR=$(pwd)
+DOWNLOAD_PATH="$DIR/backups"
+SLACK_FILE="$DIR/../post-slack"
+
+if [ ! -d "$DOWNLOAD_PATH" ]; then
+    mkdir $DOWNLOAD_PATH
+fi
+
+DOCKER_CONTAINER=$(ssh $DB_REMOTE_ADDRESS "docker ps | grep -o srv-captain--database-001-db.*")
+
+ssh $DB_REMOTE_ADDRESS "docker exec $DOCKER_CONTAINER mysqldump --single-transaction -h ${DB_MYSQL_HOST} \
+    -P ${DB_MYSQL_PORT} \
+    -u ${DB_MYSQL_USER} \
+    -p${DB_MYSQL_PASSWORD} \
+    ${DB_DATABASE_NAME} | gzip > $DUMP_FILE"
+
+scp $DB_REMOTE_ADDRESS:/root/$DUMP_FILE $DOWNLOAD_PATH/$DUMP_FILE
+
+ssh $DB_REMOTE_ADDRESS "rm $DUMP_FILE"
+
+if [ $? -eq 0 ]
+then
+    SUCCESS_MSG="$DB_DATABASE_NAME database backup successfully completed"
+    echo $SUCCESS_MSG
+    $SLACK_FILE "$SUCCESS_MSG"
+else
+    FAIL_MSG="Error found during backup for $DB_DATABASE_NAME"
+    echo $FAIL_MSG
+    $SLACK_FILE "$FAIL_MSG"
+    exit 1
+fi

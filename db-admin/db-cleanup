@@ -1,0 +1,22 @@
+#!/bin/bash
+
+DIR=$(pwd)
+DOWNLOAD_PATH="$DIR/backups"
+SLACK_FILE="$DIR/../post-slack"
+REGEX_DATE='\/([0-9]*).sql.gz'
+TIMEFRAME=$((60 * 60 * 24 * 30))
+
+# 30 days ago timestamp
+LIMIT=$((`date +"%s"`- $TIMEFRAME))
+
+for filename in "$DOWNLOAD_PATH"/*
+do
+    BASE_NAME=$(basename "$filename") 
+    TIMESTAMP="${BASE_NAME/.sql.gz/}"
+
+    if [[ $LIMIT -gt $TIMESTAMP ]]
+    then
+        rm $filename
+        echo "File $BASE_NAME was removed"
+    fi
+done
