@@ -2,6 +2,8 @@
 
 # add new user
 # sudo adduser mihai
+sudo adduser mihai sudo
+sudo adduser mihai adm
 
 # update and upgrade dependencies
 sudo apt-get update && sudo apt-get upgrade
