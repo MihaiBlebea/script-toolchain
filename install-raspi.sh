@@ -33,3 +33,15 @@ docker run -p 80:80 \
     caprover/caprover
 
 # http://192.168.1.13:3000/
+
+# set static ip
+# https://thepihut.com/blogs/raspberry-pi-tutorials/how-to-give-your-raspberry-pi-a-static-ip-address-update
+
+"interface wlan0
+
+static ip_address=192.168.0.200/24
+static routers=192.168.0.1
+static domain_name_servers=192.168.0.1" >> /etc/dhcpcd.conf
+
+# restart the raspi
+sudo reboot now
