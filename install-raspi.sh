@@ -40,8 +40,8 @@ docker run -p 80:80 \
 "interface wlan0
 
 static ip_address=192.168.0.200/24
-static routers=192.168.0.1
-static domain_name_servers=192.168.0.1" >> /etc/dhcpcd.conf
+static routers=192.168.1.1
+static domain_name_servers=192.168.1.1" >> /etc/dhcpcd.conf
 
 # restart the raspi
 sudo reboot now
