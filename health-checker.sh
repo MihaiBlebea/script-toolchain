@@ -7,4 +7,4 @@ if [[ "$response" -eq "200" ]]; then
     MESSAGE="Health check ok: task-manager-api"
 fi
 
-curl -X POST -H 'Content-type: application/json' --silent --output /dev/null --data "{\"text\":\"${MESSAGE}\"}" https://hooks.slack.com/services/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
+curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"${MESSAGE}\"}" "https://hooks.slack.com/services/${SLACK_TOKEN}"
